@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "irb"
+require_relative "../lib/active_invoicing"
+
+RELOAD_DIRS = ["lib"]
+
+def reload!(print = true)
+  root_dir = File.expand_path("..", __dir__)
+  RELOAD_DIRS.each do |dir|
+    Dir.glob("#{root_dir}/#{dir}/**/*.rb").each { |f| load(f) }
+  end
+
+  true
+rescue
+  puts "Error reloading files: #{$!.message}"
+  puts "Backtrace: #{$!.backtrace.join("\n")}"
+  false
+end
+
+IRB.start
