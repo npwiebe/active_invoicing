@@ -8,7 +8,7 @@ module ActiveInvoicing
       include ActiveModel::Model
 
       # attribute
-      attr_accessor :name, :email, :phone, :address, :city, :state, :zip, :country
+      attr_accessor :id, :name, :email, :phone, :address, :city, :state, :zip, :country
 
       # associations
       attr_accessor :invoices
