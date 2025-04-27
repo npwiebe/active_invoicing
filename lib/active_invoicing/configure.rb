@@ -17,11 +17,12 @@ module ActiveInvoicing
   class Configuration
     include Singleton
 
-    attr_accessor :quickbooks_client_id, :quickbooks_client_secret
+    cattr_accessor :quickbooks_client_id, :quickbooks_client_secret, :sandbox_mode
   end
 end
 
 ActiveInvoicing.configure do |config|
   config.quickbooks_client_id = ENV["QUICKBOOKS_CLIENT_ID"]
   config.quickbooks_client_secret = ENV["QUICKBOOKS_CLIENT_SECRET"]
+  config.sandbox_mode = ENV["SANDBOX_MODE"] == "true"
 end
