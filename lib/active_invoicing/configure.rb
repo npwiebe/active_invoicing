@@ -3,21 +3,30 @@
 require "singleton"
 
 module ActiveInvoicing
-  class << self
-    def configure
-      yield(configuration)
-    end
-
-    def configuration
-      Configuration.instance
-    end
-    alias_method :config, :configuration
-  end
-
   class Configuration
     include Singleton
 
-    cattr_accessor :quickbooks_client_id, :quickbooks_client_secret, :sandbox_mode
+    attr_accessor :quickbooks_client_id, :quickbooks_client_secret, :sandbox_mode
+
+    def initialize
+      @quickbooks_client_id = nil
+      @quickbooks_client_secret = nil
+      @sandbox_mode = nil
+    end
+  end
+
+  class << self
+    def configuration
+      Configuration.instance
+    end
+
+    def config
+      configuration
+    end
+
+    def configure
+      yield(configuration)
+    end
   end
 end
 

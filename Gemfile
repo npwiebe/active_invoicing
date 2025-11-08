@@ -3,14 +3,11 @@
 source "https://rubygems.org"
 
 # gem "rails"
-gem "rubocop-shopify", require: false
-gem "oauth2"
-gem "activemodel"
-gem "dotenv"
+
+gemspec
 
 group :development, :test do
   gem "rspec"
   gem "pry-byebug"
+  gem "rubocop-shopify", require: false
 end
-
-gem "json", "~> 2.11"

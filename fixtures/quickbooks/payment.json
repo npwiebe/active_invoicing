@@ -1,0 +1,13 @@
+{
+  "Payment": {
+    "Id": "123",
+    "TotalAmt": 500.00,
+    "CustomerRef": {
+      "value": "456",
+      "name": "John Doe"
+    },
+    "TxnDate": "2024-01-15",
+    "SyncToken": "0"
+  }
+}
+

@@ -1,0 +1,21 @@
+{
+  "QueryResponse": {
+    "Payment": [
+      {
+        "Id": "123",
+        "TotalAmt": 500.00,
+        "CustomerRef": {
+          "value": "456"
+        }
+      },
+      {
+        "Id": "456",
+        "TotalAmt": 300.00,
+        "CustomerRef": {
+          "value": "789"
+        }
+      }
+    ]
+  }
+}
+

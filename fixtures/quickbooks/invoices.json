@@ -1,0 +1,30 @@
+{
+  "QueryResponse": {
+    "Invoice": [
+      {
+        "Id": "123",
+        "DocNumber": "INV-001",
+        "CustomerRef": {
+          "value": "456"
+        },
+        "TotalAmt": 1000.00,
+        "Balance": 1000.00,
+        "TxnDate": "2024-01-15",
+        "DueDate": "2024-02-15",
+        "SyncToken": "0"
+      },
+      {
+        "Id": "124",
+        "DocNumber": "INV-002",
+        "CustomerRef": {
+          "value": "457"
+        },
+        "TotalAmt": 2000.00,
+        "Balance": 0.00,
+        "TxnDate": "2024-01-16",
+        "DueDate": "2024-02-16",
+        "SyncToken": "1"
+      }
+    ]
+  }
+} 

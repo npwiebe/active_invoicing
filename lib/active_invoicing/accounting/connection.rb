@@ -5,9 +5,16 @@ module ActiveInvoicing
     class Connection
       INTEGRATIONS = {
         quickbooks: "ActiveInvoicing::Accounting::Quickbooks::Connection",
+        # xero: "ActiveInvoicing::Accounting::Xero::Connection",
       }
 
       class << self
+        def new_test_connection(integration = :quickbooks)
+          return unless ActiveInvoicing.configuration.sandbox_mode
+
+          new_connection(integration, "http://localhost:3000")
+        end
+
         def new_connection(integration, *options)
           integration_class = INTEGRATIONS[integration.to_sym]
           if integration_class

@@ -1,0 +1,12 @@
+{
+  "Customer": {
+    "Id": "123",
+    "DisplayName": "John Doe",
+    "PrimaryEmailAddr": {
+      "Address": "john@example.com"
+    },
+    "PrimaryPhone": {
+      "FreeFormNumber": "+1-555-123-4567"
+    }
+  }
+} 

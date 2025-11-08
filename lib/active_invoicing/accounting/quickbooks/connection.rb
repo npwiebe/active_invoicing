@@ -56,12 +56,47 @@ module ActiveInvoicing
           ActiveInvoicing::Configuration.sandbox_mode ? QUICKBOOKS_OAUTH_REQUEST_DEFAULTS[:sandbox_domain] : QUICKBOOKS_OAUTH_REQUEST_DEFAULTS[:production_domain]
         end
 
+        def fetch_invoice_by_id(id)
+          ActiveInvoicing::Accounting::Quickbooks::Invoice.fetch_by_id(id, self)
+        end
+
+        def fetch_all_invoices
+          ActiveInvoicing::Accounting::Quickbooks::Invoice.fetch_all(self)
+        end
+
+        def fetch_customer_by_id(id)
+          ActiveInvoicing::Accounting::Quickbooks::Customer.fetch_by_id(id, self)
+        end
+        alias_method :fetch_contact_by_id, :fetch_customer_by_id
+
+        def fetch_all_customers
+          ActiveInvoicing::Accounting::Quickbooks::Customer.fetch_all(self)
+        end
+        alias_method :fetch_all_contacts, :fetch_all_customers
+
+        def fetch_payment_by_id(id)
+          ActiveInvoicing::Accounting::Quickbooks::Payment.fetch_by_id(id, self)
+        end
+
+        def fetch_all_payments
+          ActiveInvoicing::Accounting::Quickbooks::Payment.fetch_all(self)
+        end
+
         def request(verb, path, opts = {})
+          refresh_access_token if @tokens.expired?
+
           opts[:headers] ||= {}
           opts[:headers]["Content-Type"] ||= "application/json"
           opts[:headers]["Accept"] ||= "application/json"
           uri = URI.join(domain, path)
           @tokens.request(verb, uri, opts)
+        end
+
+        def parse_token_url(url)
+          uri = URI.parse(url)
+          params = URI.decode_www_form(uri.query).to_h
+          @realm_id = params["realmId"]
+          get_token(params["code"])
         end
       end
     end

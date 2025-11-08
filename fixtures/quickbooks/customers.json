@@ -1,0 +1,26 @@
+{
+  "QueryResponse": {
+    "Customer": [
+      {
+        "Id": "123",
+        "DisplayName": "John Doe",
+        "PrimaryEmailAddr": {
+          "Address": "john@example.com"
+        },
+        "PrimaryPhone": {
+          "FreeFormNumber": "+1-555-123-4567"
+        }
+      },
+      {
+        "Id": "456",
+        "DisplayName": "Jane Smith",
+        "PrimaryEmailAddr": {
+          "Address": "jane@example.com"
+        },
+        "PrimaryPhone": {
+          "FreeFormNumber": "+1-555-987-6543"
+        }
+      }
+    ]
+  }
+} 
