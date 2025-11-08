@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require "English"
 require "irb"
 require_relative "../lib/active_invoicing"
 
@@ -14,8 +15,8 @@ def reload!(print = true)
 
   true
 rescue
-  puts "Error reloading files: #{$!.message}"
-  puts "Backtrace: #{$!.backtrace.join("\n")}"
+  puts "Error reloading files: #{$ERROR_INFO.message}"
+  puts "Backtrace: #{$ERROR_INFO.backtrace.join("\n")}"
   false
 end
 
