@@ -53,7 +53,7 @@ module ActiveInvoicing
         end
 
         def domain
-          ActiveInvoicing::Configuration.sandbox_mode ? QUICKBOOKS_OAUTH_REQUEST_DEFAULTS[:sandbox_domain] : QUICKBOOKS_OAUTH_REQUEST_DEFAULTS[:production_domain]
+          ActiveInvoicing.configuration.sandbox_mode ? QUICKBOOKS_OAUTH_REQUEST_DEFAULTS[:sandbox_domain] : QUICKBOOKS_OAUTH_REQUEST_DEFAULTS[:production_domain]
         end
 
         def fetch_invoice_by_id(id)

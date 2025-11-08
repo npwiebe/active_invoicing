@@ -39,14 +39,14 @@ RSpec.describe(ActiveInvoicing::Accounting::BaseAccountingModel) do
   describe ".fetch_by_id" do
     it "raises ActiveInvoicing::UnimplementedMethodError" do
       expect { test_class.fetch_by_id("123", connection) }
-        .to(raise_error(ActiveInvoicing::UnimplementedMethodError, "This method should be implemented in a subclass"))
+        .to(raise_error(ActiveInvoicing::UnimplementedMethodError, "Method fetch_by_id is not implemented in ActiveInvoicing::UnimplementedMethodError"))
     end
   end
 
   describe ".fetch_all" do
     it "raises ActiveInvoicing::UnimplementedMethodError" do
       expect { test_class.fetch_all(connection) }
-        .to(raise_error(ActiveInvoicing::UnimplementedMethodError, "This method should be implemented in a subclass"))
+        .to(raise_error(ActiveInvoicing::UnimplementedMethodError, "Method fetch_all is not implemented in ActiveInvoicing::UnimplementedMethodError"))
     end
   end
 

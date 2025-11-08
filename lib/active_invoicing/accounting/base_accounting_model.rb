@@ -29,11 +29,11 @@ module ActiveInvoicing
         end
 
         def fetch_by_id(id, connection)
-          raise ActiveInvoicing::UnimplementedMethodError, "This method should be implemented in a subclass"
+          raise ActiveInvoicing::UnimplementedMethodError, "fetch_by_id"
         end
 
         def fetch_all(connection)
-          raise ActiveInvoicing::UnimplementedMethodError, "This method should be implemented in a subclass"
+          raise ActiveInvoicing::UnimplementedMethodError, "fetch_all"
         end
       end
 

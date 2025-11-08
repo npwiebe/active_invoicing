@@ -144,7 +144,7 @@ RSpec.describe(ActiveInvoicing::Accounting::Quickbooks::Connection) do
   describe "#domain" do
     context "when sandbox mode is enabled" do
       before do
-        allow(ActiveInvoicing::Configuration).to(receive(:sandbox_mode).and_return(true))
+        allow(ActiveInvoicing.configuration).to(receive(:sandbox_mode).and_return(true))
       end
 
       it "returns sandbox domain" do
@@ -154,7 +154,7 @@ RSpec.describe(ActiveInvoicing::Accounting::Quickbooks::Connection) do
 
     context "when sandbox mode is disabled" do
       before do
-        allow(ActiveInvoicing::Configuration).to(receive(:sandbox_mode).and_return(false))
+        allow(ActiveInvoicing.configuration).to(receive(:sandbox_mode).and_return(false))
       end
 
       it "returns production domain" do
