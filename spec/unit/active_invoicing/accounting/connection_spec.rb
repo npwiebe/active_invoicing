@@ -11,6 +11,10 @@ RSpec.describe(ActiveInvoicing::Accounting::Connection) do
   end
 
   describe ".new_test_connection" do
+    before do
+      allow(ActiveInvoicing.configuration).to(receive(:sandbox_mode).and_return(true))
+    end
+
     it "creates a test connection for quickbooks" do
       connection = described_class.new_test_connection(:quickbooks)
 

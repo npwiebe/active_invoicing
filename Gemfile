@@ -7,7 +7,6 @@ source "https://rubygems.org"
 gemspec
 
 group :development, :test do
-  gem "rspec"
-  gem "pry-byebug"
+  gem "pry-byebug", require: false
   gem "rubocop-shopify", require: false
 end
