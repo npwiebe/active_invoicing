@@ -182,6 +182,204 @@ payments.each do |payment|
 end
 ```
 
+## ActiveRecord Integration
+
+ActiveInvoicing provides a powerful mountable module that allows your ActiveRecord models to seamlessly integrate with accounting platforms. This feature enables bidirectional synchronization between your Rails models and accounting data.
+
+### Setting Up Mountable Models
+
+First, include the mountable concern in your ActiveRecord model:
+
+```ruby
+class User < ApplicationRecord
+  include ActiveInvoicing::ActiveRecord::Mountable
+
+  # Add columns to store external IDs
+  # t.string :quickbooks_customer_id
+end
+```
+
+### Mounting Accounting Models
+
+Use the `mounts_accounting_model` method to connect your model to accounting entities:
+
+```ruby
+class User < ApplicationRecord
+  include ActiveInvoicing::ActiveRecord::Mountable
+
+  # Mount a QuickBooks customer
+  mounts_accounting_model :quickbooks_customer,
+    class_name: "ActiveInvoicing::Accounting::Quickbooks::Customer",
+    external_id_column: :quickbooks_customer_id
+
+end
+```
+
+### Connection Methods
+
+Your model needs to provide connection methods that return authenticated accounting connections:
+
+```ruby
+class User < ApplicationRecord
+  def quickbooks_customer_connection
+    # Return an authenticated QuickBooks connection
+    @quickbooks_connection ||= ActiveInvoicing::Accounting::Connection.new_connection(
+      :quickbooks,
+      access_token: self.quickbooks_access_token,
+      refresh_token: self.quickbooks_refresh_token,
+      realm_id: self.quickbooks_realm_id
+    )
+  end
+
+  def accounting_connection
+    quickbooks_customer_connection # or another connection method
+  end
+end
+```
+
+### Accessing Accounting Models
+
+Once mounted, you get automatic getter and setter methods:
+
+```ruby
+user = User.find(1)
+user.quickbooks_customer_id = "123"
+
+# Get the accounting model
+customer = user.quickbooks_customer
+puts customer.display_name # => "John Doe"
+
+# Set the accounting model (updates the external ID)
+user.quickbooks_customer = some_customer_object
+user.quickbooks_customer_id # => "456"
+```
+
+### Synchronization
+
+The mountable module provides powerful synchronization methods:
+
+#### Sync To Accounting Model
+
+Push data from your Rails model to the accounting platform:
+
+```ruby
+user = User.find(1)
+user.name = "Updated Name"
+user.email = "updated@example.com"
+
+# Sync specific attributes to the accounting model
+user.sync_to_quickbooks_customer
+
+# Or sync all common attributes automatically
+user.sync_to_quickbooks_customer # Uses default mapping
+```
+
+#### Sync From Accounting Model
+
+Pull data from the accounting platform to your Rails model:
+
+```ruby
+user = User.find(1)
+
+# Pull latest data from QuickBooks
+user.sync_from_quickbooks_customer
+
+# This will update user.name, user.email, etc. from the accounting data
+```
+
+#### Custom Mappers
+
+For complex mappings, provide custom mapper procs:
+
+```ruby
+class User < ApplicationRecord
+  mounts_accounting_model :quickbooks_customer,
+    class_name: "ActiveInvoicing::Accounting::Quickbooks::Customer",
+    external_id_column: :quickbooks_customer_id,
+    mapper: ->(accounting_model) do
+      # Custom mapping logic for sync_to (Rails -> Accounting)
+      {
+        display_name: "#{first_name} #{last_name}",
+        primary_email_address: { address: email },
+        company_name: business_name
+      }
+    end
+
+  # You can also define separate mappers for sync_from
+  def sync_from_quickbooks_customer_with_mapper
+    customer = quickbooks_customer
+    return unless customer
+
+    # Custom mapping for sync_from (Accounting -> Rails)
+    self.first_name = customer.given_name
+    self.last_name = customer.family_name
+    self.email = customer.primary_email_address&.address
+    save
+  end
+end
+```
+
+### Default Mappings
+
+When no custom mapper is provided, the module uses sensible defaults:
+
+**For `sync_to_*` (Rails → Accounting):**
+- Maps common attributes like `:name`, `:email`, `:first_name`, `:last_name`, `:company_name`
+
+**For `sync_from_*` (Accounting → Rails):**
+- Maps common attributes like `:name`, `:email`, `:first_name`, `:last_name`
+
+### Complete Example
+
+```ruby
+class User < ApplicationRecord
+  include ActiveInvoicing::ActiveRecord::Mountable
+
+  # Database columns
+  # t.string :quickbooks_customer_id
+  # t.string :name
+  # t.string :email
+  # t.string :first_name
+  # t.string :last_name
+
+  mounts_accounting_model :quickbooks_customer,
+    class_name: "ActiveInvoicing::Accounting::Quickbooks::Customer",
+    external_id_column: :quickbooks_customer_id
+
+  def quickbooks_customer_connection
+    ActiveInvoicing::Accounting::Connection.new_connection(
+      :quickbooks,
+      access_token: quickbooks_access_token,
+      refresh_token: quickbooks_refresh_token,
+      realm_id: quickbooks_realm_id
+    )
+  end
+
+  # Usage examples:
+  def create_or_update_in_quickbooks
+    if quickbooks_customer_id.nil?
+      # Create new customer in QuickBooks
+      customer = ActiveInvoicing::Accounting::Quickbooks::Customer.create(
+        display_name: name,
+        primary_email_address: { address: email },
+        connection: quickbooks_customer_connection
+      )
+      self.quickbooks_customer = customer
+      save
+    else
+      # Update existing customer
+      sync_to_quickbooks_customer
+    end
+  end
+
+  def refresh_from_quickbooks
+    sync_from_quickbooks_customer if quickbooks_customer_id.present?
+  end
+end
+```
+
+This mountable integration makes it easy to keep your Rails application and accounting data in sync, handling the complexities of API authentication, data mapping, and bidirectional synchronization automatically.
+
 ## Xero Usage
 
 Xero support is still being built out. Basic customer and invoice fetching works:
