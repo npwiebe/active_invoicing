@@ -112,7 +112,7 @@ module ActiveInvoicing
         end
 
         def push_to_source
-          @push_response = connection.request(:post, invoice_url_builder, { body: to_json })
+          @push_response = connection.request(:post, invoice_url, { body: to_json })
           if @push_response.response.success?
             @persisted = true
             update_sync_token(@push_response.response)
@@ -123,15 +123,15 @@ module ActiveInvoicing
           end
         end
 
-        def invoice_url_builder
-          self.class.invoice_url_builder(connection)
+        def invoice_url
+          self.class.invoice_url(connection)
         end
 
         class << self
           def fetch_by_id(id, connection, join_customer: false)
             return unless id && connection&.is_a?(ActiveInvoicing::Accounting::Quickbooks::Connection)
 
-            response = connection.request(:get, "/v3/company/#{connection.realm_id}/invoice/#{id}")
+            response = connection.request(:get, "#{invoice_url(connection)}#{id}")
             mapped_response = Response.from_json(response.body)
             invoice = mapped_response.invoice
             return unless invoice
@@ -144,7 +144,7 @@ module ActiveInvoicing
           def fetch_all(connection)
             return unless connection&.is_a?(ActiveInvoicing::Accounting::Quickbooks::Connection)
 
-            response = connection.request(:get, "/v3/company/#{connection.realm_id}/query?query=select * from Invoice")
+            response = connection.request(:get, query_url(connection))
             mapped_query_response = Response.from_json(response.body).query_response
             return [] unless mapped_query_response.try(:invoices).present?
 
@@ -156,15 +156,12 @@ module ActiveInvoicing
             mapped_query_response.invoices
           end
 
-          def invoice_url_builder(connection, query: nil)
-            url = "/v3/company/#{connection.realm_id}"
-            url += if query
-              "/query?query=#{query}"
-            else
-              "/invoice/"
-            end
+          def invoice_url(connection)
+            "/v3/company/#{connection.realm_id}/invoice/"
+          end
 
-            url
+          def query_url(connection)
+            "/v3/company/#{connection.realm_id}/query?query=select * from Invoice"
           end
         end
       end

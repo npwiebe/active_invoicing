@@ -192,18 +192,6 @@ RSpec.describe(ActiveInvoicing::Accounting::Quickbooks::Invoice) do
     end
   end
 
-  describe ".invoice_url_builder" do
-    it "builds URL for single invoice" do
-      url = described_class.invoice_url_builder(connection)
-      expect(url).to(eq("/v3/company/123456789/invoice/"))
-    end
-
-    it "builds URL with query parameters" do
-      url = described_class.invoice_url_builder(connection, query: "select * from Invoice where TotalAmt > 1000")
-      expect(url).to(eq("/v3/company/123456789/query?query=select * from Invoice where TotalAmt > 1000"))
-    end
-  end
-
   describe "#save" do
     before do
       allow(invoice).to(receive(:connection).and_return(connection))

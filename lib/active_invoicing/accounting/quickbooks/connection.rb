@@ -88,7 +88,7 @@ module ActiveInvoicing
           opts[:headers] ||= {}
           opts[:headers]["Content-Type"] ||= "application/json"
           opts[:headers]["Accept"] ||= "application/json"
-          uri = URI.join(domain, path)
+          uri = URI.join(domain, path) unless opts[:absolute_path]
           @tokens.request(verb, uri, opts)
         end
 
@@ -97,6 +97,8 @@ module ActiveInvoicing
           params = URI.decode_www_form(uri.query).to_h
           @realm_id = params["realmId"]
           get_token(params["code"])
+
+          self
         end
       end
     end
