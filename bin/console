@@ -3,7 +3,7 @@
 
 require "English"
 require "irb"
-require_relative "../lib/active_invoicing"
+require_relative "../lib/active_accounting_integration"
 
 RELOAD_DIRS = ["lib"]
 

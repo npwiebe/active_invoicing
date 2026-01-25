@@ -13,10 +13,10 @@
 # a separate helper file that requires the additional dependencies and performs
 # the additional setup, and require it from the spec files that actually need
 # it.
-
+#
 $LOAD_PATH.unshift(File.expand_path("../../lib", __FILE__))
 
-require "active_invoicing"
+require "active_accounting_integration"
 require "pry-byebug"
 require_relative "support/fixture_helper"
 #
@@ -56,7 +56,7 @@ RSpec.configure do |config|
   # with RSpec, but feel free to customize to your heart's content.
   #   # This allows you to limit a spec run to individual examples or groups
   #   # you care about by tagging them with `:focus` metadata. When nothing
-  #   # is tagged with `:focus`, all examples get run. RSpec also provides
+  #   is tagged with `:focus`, all examples get run. RSpec also provides
   #   # aliases for `it`, `describe`, and `context` that include `:focus`
   #   # metadata: `fit`, `fdescribe` and `fcontext`, respectively.
   #   config.filter_run_when_matching :focus

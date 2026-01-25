@@ -1,15 +1,15 @@
-# ActiveInvoicing
+# ActiveAccountingIntegration
 
 **Note: This gem is still under active development**
 
-ActiveInvoicing provides a Ruby interface for working with accounting platforms like QuickBooks and Xero. It handles OAuth2 authentication, API requests, and gives you ActiveModel-style objects to work with.
+ActiveAccountingIntegration provides a Ruby interface for working with accounting platforms like QuickBooks and Xero. It handles OAuth2 authentication, API requests, and gives you ActiveModel-style objects to work with.
 
 ## Installation
 
 Add to your Gemfile:
 
 ```ruby
-gem 'active_invoicing'
+gem 'active_accounting_integration'
 ```
 
 Then run:
@@ -32,7 +32,7 @@ QUICKBOOKS_CLIENT_SECRET=your_client_secret
 Or configure directly in your code:
 
 ```ruby
-ActiveInvoicing.configure do |config|
+ActiveAccountingIntegration.configure do |config|
   config.quickbooks_client_id = 'your_client_id'
   config.quickbooks_client_secret = 'your_client_secret'
 end
@@ -46,7 +46,7 @@ First, you need to get the user to authorize your app with QuickBooks:
 
 ```ruby
 redirect_uri = "http://localhost:3000/callback"
-connection = ActiveInvoicing::Accounting::Connection.new_connection(
+connection = ActiveAccountingIntegration::Accounting::Connection.new_connection(
   :quickbooks,
   redirect_uri
 )
@@ -97,7 +97,7 @@ end
 Create a customer:
 
 ```ruby
-customer = ActiveInvoicing::Accounting::Quickbooks::Customer.create(
+customer = ActiveAccountingIntegration::Accounting::Quickbooks::Customer.create(
   display_name: "Acme Corp",
   company_name: "Acme Corporation",
   primary_email_address: { address: "billing@acme.com" },
@@ -145,7 +145,7 @@ end
 Create an invoice:
 
 ```ruby
-invoice = ActiveInvoicing::Accounting::Quickbooks::Invoice.create(
+invoice = ActiveAccountingIntegration::Accounting::Quickbooks::Invoice.create(
   customer_ref: { value: "123" },
   line_items: [
     {
@@ -184,7 +184,7 @@ end
 
 ## ActiveRecord Integration
 
-ActiveInvoicing provides a powerful mountable module that allows your ActiveRecord models to seamlessly integrate with accounting platforms. This feature enables bidirectional synchronization between your Rails models and accounting data.
+ActiveAccountingIntegration provides a powerful mountable module that allows your ActiveRecord models to seamlessly integrate with accounting platforms. This feature enables bidirectional synchronization between your Rails models and accounting data.
 
 ### Setting Up Mountable Models
 
@@ -192,7 +192,7 @@ First, include the mountable concern in your ActiveRecord model:
 
 ```ruby
 class User < ApplicationRecord
-  include ActiveInvoicing::ActiveRecord::Mountable
+  include ActiveAccountingIntegration::ActiveRecord::Mountable
 
   # Add columns to store external IDs
   # t.string :quickbooks_customer_id
@@ -205,11 +205,11 @@ Use the `mounts_accounting_model` method to connect your model to accounting ent
 
 ```ruby
 class User < ApplicationRecord
-  include ActiveInvoicing::ActiveRecord::Mountable
+  include ActiveAccountingIntegration::ActiveRecord::Mountable
 
   # Mount a QuickBooks customer
   mounts_accounting_model :quickbooks_customer,
-    class_name: "ActiveInvoicing::Accounting::Quickbooks::Customer",
+    class_name: "ActiveAccountingIntegration::Accounting::Quickbooks::Customer",
     external_id_column: :quickbooks_customer_id
 
 end
@@ -223,7 +223,7 @@ Your model needs to provide connection methods that return authenticated account
 class User < ApplicationRecord
   def quickbooks_customer_connection
     # Return an authenticated QuickBooks connection
-    @quickbooks_connection ||= ActiveInvoicing::Accounting::Connection.new_connection(
+    @quickbooks_connection ||= ActiveAccountingIntegration::Accounting::Connection.new_connection(
       :quickbooks,
       access_token: self.quickbooks_access_token,
       refresh_token: self.quickbooks_refresh_token,
@@ -287,7 +287,7 @@ For complex mappings, you can provide separate mappers for each direction or a s
 ```ruby
 class User < ApplicationRecord
   mounts_accounting_model :quickbooks_customer,
-    class_name: "ActiveInvoicing::Accounting::Quickbooks::Customer",
+    class_name: "ActiveAccountingIntegration::Accounting::Quickbooks::Customer",
     external_id_column: :quickbooks_customer_id,
     mapper_to: ->(accounting_model) do
       # Rails -> Accounting: Map from self (Rails model) to accounting model
@@ -318,7 +318,7 @@ When no custom mapper is provided, the module automatically discovers and maps *
 
 ```ruby
 class User < ApplicationRecord
-  include ActiveInvoicing::ActiveRecord::Mountable
+  include ActiveAccountingIntegration::ActiveRecord::Mountable
 
   # Database columns
   # t.string :quickbooks_customer_id
@@ -328,11 +328,11 @@ class User < ApplicationRecord
   # t.string :last_name
 
   mounts_accounting_model :quickbooks_customer,
-    class_name: "ActiveInvoicing::Accounting::Quickbooks::Customer",
+    class_name: "ActiveAccountingIntegration::Accounting::Quickbooks::Customer",
     external_id_column: :quickbooks_customer_id
 
   def quickbooks_customer_connection
-    ActiveInvoicing::Accounting::Connection.new_connection(
+    ActiveAccountingIntegration::Accounting::Connection.new_connection(
       :quickbooks,
       access_token: quickbooks_access_token,
       refresh_token: quickbooks_refresh_token,
@@ -344,7 +344,7 @@ class User < ApplicationRecord
   def create_or_update_in_quickbooks
     if quickbooks_customer_id.nil?
       # Create new customer in QuickBooks
-      customer = ActiveInvoicing::Accounting::Quickbooks::Customer.create(
+      customer = ActiveAccountingIntegration::Accounting::Quickbooks::Customer.create(
         display_name: name,
         primary_email_address: { address: email },
         connection: quickbooks_customer_connection
