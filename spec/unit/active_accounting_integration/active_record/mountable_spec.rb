@@ -10,6 +10,17 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
       # Mock ActiveRecord methods
       attr_accessor :name, :email, :first_name, :last_name, :quickbooks_customer_id
 
+      # Mock ActiveRecord-style attributes method
+      def attributes
+        {
+          "name" => name,
+          "email" => email,
+          "first_name" => first_name,
+          "last_name" => last_name,
+          "quickbooks_customer_id" => quickbooks_customer_id,
+        }
+      end
+
       def assign_attributes(attrs)
         attrs.each { |k, v| public_send("#{k}=", v) }
       end
@@ -73,22 +84,27 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
       allow(model).to(receive(:invoice_date).and_return(Date.today))
       allow(model).to(receive(:paid_at).and_return(Date.today))
 
-      # Set up respond_to? expectations for common attributes
-      allow(model).to(receive(:respond_to?).and_return(true)) # Allow any respond_to? call by default
-      allow(model).to(receive(:respond_to?).with(:name).and_return(true))
-      allow(model).to(receive(:respond_to?).with(:email).and_return(true))
-      allow(model).to(receive(:respond_to?).with(:first_name).and_return(true))
-      allow(model).to(receive(:respond_to?).with(:last_name).and_return(true))
-      allow(model).to(receive(:respond_to?).with("name=").and_return(true))
-      allow(model).to(receive(:respond_to?).with("email=").and_return(true))
-      allow(model).to(receive(:respond_to?).with("first_name=").and_return(true))
-      allow(model).to(receive(:respond_to?).with("last_name=").and_return(true))
-      allow(model).to(receive(:respond_to?).with("company_name=").and_return(true))
-      allow(model).to(receive(:respond_to?).with(:name=).and_return(true))
-      allow(model).to(receive(:respond_to?).with(:email=).and_return(true))
-      allow(model).to(receive(:respond_to?).with(:first_name=).and_return(true))
-      allow(model).to(receive(:respond_to?).with(:last_name=).and_return(true))
-      allow(model).to(receive(:respond_to?).with(:company_name=).and_return(true))
+      # Mock ActiveRecord-style attributes method
+      allow(model).to(receive(:attributes).and_return({
+        "name" => "Test Customer",
+        "email" => "test@example.com",
+        "first_name" => "John",
+        "last_name" => "Doe",
+        "company_name" => "Test Company",
+        "external_id" => "123",
+      }))
+
+      # Set up respond_to? expectations - allow setters for any attribute
+      allow(model).to(receive(:respond_to?)) do |method_name|
+        method_str = method_name.to_s
+        if method_str.end_with?("=")
+          # Allow any setter (for custom mappers)
+          true
+        else
+          method_str == "save" || method_str == "attributes" ||
+            [:name, :email, :first_name, :last_name, :company_name, :external_id].include?(method_name.to_sym)
+        end
+      end
       allow(model).to(receive(:save))
     end
   end
@@ -138,16 +154,19 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
     end
 
     it "stores custom mapper" do
-      mapper = proc { {} }
+      mapper_to = proc { {} }
+      mapper_from = proc { {} }
       test_class.mounts_accounting_model(
         :quickbooks_customer,
         class_name: "TestAccountingModel",
         external_id_column: :quickbooks_customer_id,
-        mapper: mapper,
+        mapper_to: mapper_to,
+        mapper_from: mapper_from,
       )
 
       config = test_class._mounted_accounting_models[:quickbooks_customer]
-      expect(config[:mapper]).to(eq(mapper))
+      expect(config[:mapper_to]).to(eq(mapper_to))
+      expect(config[:mapper_from]).to(eq(mapper_from))
     end
   end
 
@@ -223,7 +242,7 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
       end
 
       it "uses custom mapper when provided" do
-        custom_mapper = proc do |accounting_model|
+        custom_mapper = proc do |_accounting_model|
           { name: "Custom #{name}", custom_field: "value" }
         end
 
@@ -233,7 +252,7 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
           :quickbooks_customer_custom,
           class_name: "TestAccountingModel",
           external_id_column: :quickbooks_customer_id,
-          mapper: custom_mapper,
+          mapper_to: custom_mapper,
         )
 
         allow(mock_accounting_model).to(receive(:custom_field=))
@@ -288,7 +307,7 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
           :quickbooks_customer_custom,
           class_name: "TestAccountingModel",
           external_id_column: :quickbooks_customer_id,
-          mapper: custom_mapper,
+          mapper_from: custom_mapper,
         )
 
         allow(instance).to(receive(:quickbooks_customer_custom_connection).and_return(mock_connection))
@@ -301,7 +320,7 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
       end
 
       it "uses separate mapper_to and mapper_from when provided" do
-        mapper_to = proc do |accounting_model|
+        mapper_to = proc do |_accounting_model|
           # Rails -> Accounting
           {
             display_name: "#{first_name} #{last_name}",
@@ -326,6 +345,13 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
           allow(model).to(receive(:display_name=))
           allow(model).to(receive(:primary_email_address=))
           allow(model).to(receive(:save))
+          # Mock ActiveRecord-style attributes method
+          allow(model).to(receive(:attributes).and_return({
+            "given_name" => "Jane",
+            "family_name" => "Smith",
+            "primary_email_address" => double(address: "jane@example.com"),
+            "external_id" => "123",
+          }))
         end
 
         mock_accounting_class_with_names = double("accounting_class").tap do |klass|
@@ -348,12 +374,12 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
         allow(instance).to(receive(:quickbooks_customer_separate_connection).and_return(mock_connection))
 
         # Test sync_to direction
-        result_to = instance.sync_to_quickbooks_customer_separate
+        instance.sync_to_quickbooks_customer_separate
         expect(mock_accounting_model_with_names).to(have_received(:display_name=).with("John Doe"))
         expect(mock_accounting_model_with_names).to(have_received(:primary_email_address=).with({ address: "john@example.com" }))
 
         # Test sync_from direction
-        result_from = instance.sync_from_quickbooks_customer_separate
+        instance.sync_from_quickbooks_customer_separate
         expect(instance.first_name).to(eq("Jane"))
         expect(instance.last_name).to(eq("Smith"))
         expect(instance.email).to(eq("jane@example.com"))
@@ -398,11 +424,23 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
 
     it "excludes attributes that don't exist on accounting model" do
       test_model = double("accounting_model")
-      allow(test_model).to(receive(:respond_to?).with("name=").and_return(false))
-      allow(test_model).to(receive(:respond_to?).with("email=").and_return(true))
-      allow(test_model).to(receive(:respond_to?).with("first_name=").and_return(true))
-      allow(test_model).to(receive(:respond_to?).with("last_name=").and_return(true))
-      allow(test_model).to(receive(:respond_to?).with("company_name=").and_return(true))
+      allow(test_model).to(receive(:respond_to?)) do |method_name|
+        method_str = method_name.to_s
+        if method_str.end_with?("=")
+          # Only allow setters for attributes that exist on the accounting model
+          attr_name = method_str.chomp("=").to_sym
+          [:email, :first_name, :last_name, :company_name].include?(attr_name)
+        else
+          method_str == "attributes"
+        end
+      end
+      # Mock ActiveRecord-style attributes method
+      allow(test_model).to(receive(:attributes).and_return({
+        "email" => nil,
+        "first_name" => nil,
+        "last_name" => nil,
+        "company_name" => nil,
+      }))
 
       attributes = instance.send(:default_map_to_accounting_model, test_model)
 
@@ -447,13 +485,19 @@ RSpec.describe(ActiveAccountingIntegration::ActiveRecord::Mountable) do
     end
 
     it "excludes blank values from accounting model" do
-      blank_accounting_model = double(
-        "accounting_model",
-        name: "",
-        email: nil,
-        first_name: "John",
-        last_name: "Doe",
-      )
+      blank_accounting_model = double("accounting_model").tap do |model|
+        allow(model).to(receive(:name).and_return(""))
+        allow(model).to(receive(:email).and_return(nil))
+        allow(model).to(receive(:first_name).and_return("John"))
+        allow(model).to(receive(:last_name).and_return("Doe"))
+        # Mock ActiveRecord-style attributes method
+        allow(model).to(receive(:attributes).and_return({
+          "name" => "",
+          "email" => nil,
+          "first_name" => "John",
+          "last_name" => "Doe",
+        }))
+      end
 
       attributes = instance.send(:default_map_from_accounting_model, blank_accounting_model)
 

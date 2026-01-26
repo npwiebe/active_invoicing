@@ -63,7 +63,7 @@ module ActiveAccountingIntegration
             attributes = if config[:mapper_to]
               instance_exec(accounting_model, &config[:mapper_to])
             else
-              default_map_to_accounting_model(accounting_model)
+              default_map_to_accounting_model(accounting_model, exclude: config[:external_id_column])
             end
 
             attributes.each do |key, value|
@@ -102,21 +102,26 @@ module ActiveAccountingIntegration
 
       private
 
-      def default_map_to_accounting_model(accounting_model)
-        default_map(from: self, to: accounting_model)
+      def default_map_to_accounting_model(accounting_model, exclude: nil)
+        default_map(from: self, to: accounting_model, exclude: exclude)
       end
 
       def default_map_from_accounting_model(accounting_model)
         default_map(from: accounting_model, to: self)
       end
 
-      def default_map(from:, to:)
+      def default_map(from:, to:, exclude: nil)
         attributes = {}
 
-        from.class.attributes.keys.each do |attr_sym|
+        return attributes unless from.respond_to?(:attributes)
+
+        from.attributes.keys.each do |attr_sym|
+          attr_sym = attr_sym.to_sym
+          next if exclude && attr_sym == exclude.to_sym
+
           setter_name = "#{attr_sym}="
 
-          if to.respond_to?(attr_sym) && from.respond_to?(setter_name)
+          if to.respond_to?(setter_name)
             value = from.public_send(attr_sym)
             attributes[attr_sym] = value if value.present?
           end
