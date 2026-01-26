@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name = "active_accounting_integration"
   spec.version = ActiveAccountingIntegration::VERSION
   spec.authors = ["Noah Wiebe"]
-  spec.email = ["npwiebe@gmaill.com"]
+  spec.email = ["npwiebe@gmail.com"]
   spec.summary = "A Ruby gem for managing invoicing and accounting tasks."
   spec.description = "ActiveAccountingIntegration is a Ruby gem that provides a simple and efficient way to manage invoicing and accounting tasks, integrating with popular accounting platforms."
   spec.license = "MIT"
